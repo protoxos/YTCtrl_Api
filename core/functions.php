@@ -77,7 +77,7 @@
 				[ 
 					'token' => $data['token'],
 					'action_id' => $data['action_id'],
-					'action_data' => $data['action_data'],
+					'action_data' => !empty(@$data['action_data']) ? @$data['action_data'] : '',
 					'created_time' => time()
 				]
 			);
@@ -102,13 +102,10 @@
 		if ($data != false && !empty($data['object_data'])) {
 
 			//	Borramos la info anterior del mismo tipo...
-			$sql = 'DELETE FROM spreadbox WHERE token = :token AND object_data = :object_data';
+			$sql = 'DELETE FROM spreadbox WHERE token = :token';
 			service_db_excecute(
 				$sql, 
-				[ 
-					'token' => $data['token'], 
-					'object_data' => $data['object_data']
-				]
+				[ 'token' => $data['token'] ]
 			);
 
 			// Insertamos la accion...
@@ -145,7 +142,7 @@
 
 		if ($data != false) {
 			$result = service_db_select(
-				'SELECT * FROM action_box WHERE token = :token AND created_time = :created_time',
+				'SELECT * FROM action_box WHERE token = :token AND created_time > :created_time',
 				[
 					'token' => $data['token'],
 					'created_time' => $data['created_time']
@@ -159,16 +156,18 @@
 
 	function get_info() {
 		$data = get_data();
-		$result = [];
+		$result = null;
 
 		if ($data != false) {
 			$result = service_db_select(
-				'SELECT * FROM action_box WHERE token = :token AND created_time > :created_time',
+				'SELECT * FROM spreadbox WHERE token = :token AND created_time > :created_time',
 				[
 					'token' => $data['token'],
 					'created_time' => $data['created_time']
 				]
 			);
+
+			$result = empty($result) ? null : $result[0];
 		}
 
 		service_end(Status::Success, $result);
